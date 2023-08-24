@@ -1,0 +1,35 @@
+{
+  "name": "statezx",
+  "version": "1.0.0",
+  "description": "Simple client-side state manager with events, synchronization, and indexedDB storage",
+  "type": "module",
+  "browser": "./dist/statezx.js",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "node ./esbuild.config.js",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/craigbuckler/statezx.git"
+  },
+  "bugs": {
+    "url": "https://github.com/craigbuckler/statezx/issues"
+  },
+  "homepage": "https://github.com/craigbuckler/statezx#readme",
+  "keywords": [
+    "client",
+    "browser",
+    "state",
+    "manager",
+    "indexeddb"
+  ],
+  "author": "Craig Buckler",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.19.2",
+    "pixdb": "^1.0.1"
+  }
+}
