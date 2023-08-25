@@ -31,7 +31,7 @@ stateZx works in a different way to [stateZ](https://github.com/craigbuckler/sta
 | syncing | manual or on page unload | automatic, real-time |
 | performance | good, but synchronous storage | good with asynchronous storage |
 
-In general, [stateZ](https://github.com/craigbuckler/statez) is a reasonable option for web sites with minimal storage requirements. stateZx may be preferable for more complex web apps.
+[stateZ](https://github.com/craigbuckler/statez) is a good option for web sites with minimal storage requirements. stateZx may be preferable for complex web apps storing large amounts of data.
 
 
 ## Installation
@@ -39,7 +39,7 @@ In general, [stateZ](https://github.com/craigbuckler/statez) is a reasonable opt
 Load the module from a CDN:
 
 ```js
-import { statezx } from 'https://cdn.jsdelivr.net/npm/statezx/dist/statezx.js'
+import { stateZx } from 'https://cdn.jsdelivr.net/npm/statezx/dist/statezx.js';
 ```
 
 If using `npm` and a bundler, install with:
@@ -69,7 +69,7 @@ Create/access a named state store by passing an optional name and initialization
 const state = await stateZx('myState', { a: 1, b: 2, c: 3 });
 ```
 
-This returns a Promise so `await` is used. Any state object on any page which accesses the same `myState` store has access to the same properties. Values from the database initialize the properties. If `a` does not exist, it uses the value from the initialization object, e.g. `state.a` would be set to `1`.
+This returns a Promise so `await` is used. Any state object on any page which accesses the same `myState` store has access to the same properties. Values from the database initialize the properties. If `a` is not defined, the initialization object sets `state.a` to `1`.
 
 Set and retrieve values:
 
@@ -165,7 +165,7 @@ const state = await stateZx('myState', {
 });
 ```
 
-stateZx uses previously-stored database values by default. Therefore, `state.a` is only set to `1` if it wasn't stored (or it's `1` in the store). Setting a new value stores it in the indexedDB database, triggers events, and synchronizes with other tabs/windows (which trigger their own events).
+stateZx uses previously-stored database values by default. Therefore, `state.a` is only set to `1` if it's undefined (or it's `1` in the store). Setting a new value triggers events, stores it in the indexedDB database, and synchronizes with other tabs/windows using stateZx on the same domain (which trigger their own events).
 
 
 ### .stateId
@@ -209,22 +209,22 @@ Property:
 * *names* can contain letters in any case, numbers, or hyphens - but must start with a letter
 * *values* can be any native value, array, or object - but not a function
 
-Values are checked to ensure they've changed before triggering storage, events, and tab/window synchronization. Setting `state.a = 1` only has an effect if it's not already `1`.
+Values are checked to ensure they've changed before triggering events, storage, and tab/window synchronization. Setting `state.a = 1` only has an effect when it's not already `1`.
 
 
-### Setting properties as objects or arrays
+### Setting properties to objects or arrays
 
-Setting a property to an object or array will **always** trigger storage, events, and tab/window synchronization. This occurs because objects are passed by reference. Two instances are not the same even when their values are identical:
+Setting a property to an object or array will **always** trigger events, storage, and tab/window synchronization. This occurs because objects are passed by reference. Two objects or arrays are not the same even when their values are identical:
 
 ```js
 console.log( state.myArray );   // [1,2,3]
-state.myArray = [1,2,3];        // triggers store, event, sync
+state.myArray = [1,2,3];        // triggers event, store, sync
 
 console.log( state.myObject );  // {a:1,b:2}
-state.myObject = {a:1,b:2};     // triggers store, event, sync
+state.myObject = {a:1,b:2};     // triggers event, store, sync
 ```
 
-Setting a child property or array element will **not** trigger storage, events, and synchronization:
+Setting a child property or array element will **not** trigger events, storage, and synchronization:
 
 ```js
 state.myArray.push[4];  // not handled
@@ -237,7 +237,7 @@ It may be preferable to update the whole object or create separate stateZx store
 
 ### .set(property, value)
 
-Sets temporary session-like values in the current tab. It does not trigger storage, events, and synchronization:
+Sets temporary session-like values in the current tab. It does not trigger events, storage, and synchronization:
 
 ```js
 // set value
@@ -292,7 +292,7 @@ function stateEventHandler(evt) {
 }
 ```
 
-A state change will also trigger on other tabs and windows using stateZx on the same domain during synchronization.
+A state change also triggers events on other tabs and windows that use stateZx with the same store on the same domain.
 
 Remove event handlers with the `.removeEventListener()` method:
 
@@ -306,7 +306,7 @@ state.removeEventListener('myProp', stateEventHandler);
 
 You can synchronously change and examine any stateZx object's properties in real time. There are no asynchronous operations other than the initial constructor.
 
-stateZx records all property changes. A process runs on a later iteration of the JavaScript event loop to make background updates. It executes no more than 60 times per second, although it's unlikely to occur that often. Consider the following code:
+stateZx records all property changes. A later iteration of the JavaScript event loop triggers events, updates storage, and synchronizes across tabs/windows when the CPU is idle. Consider the following code:
 
 ```js
 let counter = state.counter;
@@ -317,15 +317,15 @@ for (let i = 0; i < 1000; i++) {
 }
 ```
 
-The code will **not** trigger 1,000 storage, event, and synchronization processes. If `state.counter` is initially stored as `0`, the synchronous loop will complete and it's value will become `1000`. The update process runs at some future point which:
+The code will **not** trigger 1,000 event, storage, and synchronization processes. If `state.counter` is initially stored as `0`, the synchronous loop will complete and it's value changes to `1000`. The update process runs at some future point which:
 
 1. triggers local events where the `details` object has `.property` set to `'counter'`, `.oldValue` set to `0`, and `.value` set to `1000`
 
-1. updates `counter` in the indexedDB store which changes the value from `0` to `1000`
+1. updates `counter` in the indexedDB store to change the value from `0` to `1000`
 
-1. broadcasts a synchronization event to all tabs/windows on the same domain using stateZx which triggers an identical event.
+1. broadcasts a synchronization event to all tabs/windows on the same domain using stateZx which triggers identical events.
 
-Intensive state changes do not have a significant impact on performance because stateZx only updates changed properties when the program is idle. Nothing would run if `state.counter = 0;` was added after the loop!
+Intensive state changes do not have a significant impact on performance because stateZx makes background updates when the program is idle. Nothing would run if `state.counter = 0;` was added after the loop!
 
 
 ## Usage policy
