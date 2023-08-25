@@ -25,7 +25,7 @@ console.assert(myState1a.stateId === 'myState1', `myState1a incorrect stateId: $
 
 // ----------------
 // session value
-console.assert(typeof statezx.session === 'undefined', `myState.session is set to ${ statezx.session }`);
+console.assert(typeof statezx.session === 'undefined', `myState.session set to ${ statezx.session } and not "undefined"`);
 
 const ssVal = 'session value';
 statezx.set('session', ssVal);

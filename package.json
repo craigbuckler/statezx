@@ -1,6 +1,6 @@
 {
   "name": "statezx",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Simple client-side state manager with events, synchronization, and indexedDB storage",
   "type": "module",
   "browser": "./dist/statezx.js",

@@ -13,6 +13,10 @@ let
   db, dbTry = 3;                              // PixDB object
 
 
+// simple requestIdleCallback polyfill
+const idleCallback = window.requestIdleCallback || (cb => setTimeout(cb, 20));
+
+
 // state storage class
 class State extends EventTarget {
 
@@ -188,7 +192,7 @@ function setState(state, property, value) {
 
     data.value = value;
     syncQ.set( id, data );
-    sync = sync || requestAnimationFrame(syncState);
+    sync = sync || idleCallback(syncState);
 
   }
 
